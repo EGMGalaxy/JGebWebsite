@@ -470,6 +470,7 @@ function initDesktop() {
     const netEl = windowElement.querySelector('#tm-net');
     const cpuBar = windowElement.querySelector('#tm-cpu-bar');
     const ramBar = windowElement.querySelector('#tm-ram-bar');
+    const netBar = windowElement.querySelector('#tm-net-bar');
     const procsBody = windowElement.querySelector('#tm-procs');
 
     const render = () => {
@@ -486,6 +487,7 @@ function initDesktop() {
 
       if (cpuBar) cpuBar.style.width = `${cpu.toFixed(0)}%`;
       if (ramBar) ramBar.style.width = `${ramPct.toFixed(0)}%`;
+      if (netBar) netBar.style.width = `${clamp((net / 12.0) * 100, 0, 100).toFixed(0)}%`;
 
       // Processes = open windows
       if (procsBody) {
