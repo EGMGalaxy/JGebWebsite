@@ -8,6 +8,9 @@ function initDesktop() {
     const desktopIcons = document.querySelectorAll('.desktop-icon');
     const windowContainer = document.getElementById('window-container');
     const windowTemplate = document.getElementById('window-template');
+
+    const isMobile = window.matchMedia('(max-width: 640px)').matches || window.matchMedia('(pointer: coarse)').matches;
+
     
     // Create window from template
     function createWindow(type) {
@@ -36,13 +39,21 @@ function initDesktop() {
                 windowElement.querySelector('.window-icon').setAttribute('data-feather', 'settings');
                 break;
         }
-        
-        // Set random initial position
-        const maxLeft = window.innerWidth - 600;
-        const maxTop = window.innerHeight - 450;
-        windowElement.style.left = `${Math.max(50, Math.floor(Math.random() * maxLeft))}px`;
-        windowElement.style.top = `${Math.max(50, Math.floor(Math.random() * maxTop))}px`;
-        
+        // Default size + initial position
+        if (isMobile) {
+            // Smaller window on mobile (still movable)
+            windowElement.classList.add('mobile-window');
+            windowElement.style.width = '92vw';
+            windowElement.style.height = '70vh';
+            windowElement.style.left = '4vw';
+            windowElement.style.top = '10vh';
+        } else {
+            // Random initial position on desktop
+            const maxLeft = Math.max(60, window.innerWidth - 520);
+            const maxTop = Math.max(60, window.innerHeight - 420);
+            windowElement.style.left = `${Math.floor(40 + Math.random() * (maxLeft - 40))}px`;
+            windowElement.style.top = `${Math.floor(40 + Math.random() * (maxTop - 40))}px`;
+        }
         // Add to DOM
         windowContainer.appendChild(windowElement);
         
@@ -65,39 +76,65 @@ function initDesktop() {
         const maximizeBtn = windowElement.querySelector('.window-maximize');
         const closeBtn = windowElement.querySelector('.window-close');
         
-        // Drag functionality
-        header.addEventListener('mousedown', (e) => {
-            // Don't start dragging when clicking/tapping window control buttons (icons become <svg>)
-            if (e.target && e.target.closest && e.target.closest('button')) return;
+        
+        // Drag functionality (mouse + touch) via Pointer Events
+        const startDrag = (e) => {
+            // Don't start dragging when interacting with window buttons (incl. Feather's SVG)
+            if (e.target.closest('button')) return;
+
+            // If the window is maximized, ignore drag (feels more "OS-like")
+            if (windowElement.classList.contains('maximized')) return;
+
+            // Bring to front when grabbed
+            bringToFront(windowElement);
 
             const startX = e.clientX;
             const startY = e.clientY;
-            const startLeft = parseInt(windowElement.style.left) || 0;
-            const startTop = parseInt(windowElement.style.top) || 0;
-            
-            // Bring to front when clicked
-            bringToFront(windowElement);
-            
-            function moveWindow(e) {
-                const newLeft = startLeft + e.clientX - startX;
-                const newTop = startTop + e.clientY - startY;
-                
-                windowElement.style.left = `${Math.max(0, newLeft)}px`;
-                windowElement.style.top = `${Math.max(0, newTop)}px`;
-            }
-            
-            function stopMoving() {
-                document.removeEventListener('mousemove', moveWindow);
-                document.removeEventListener('mouseup', stopMoving);
-                windowElement.classList.remove('window-dragging');
-            }
-            
-            document.addEventListener('mousemove', moveWindow);
-            document.addEventListener('mouseup', stopMoving);
-            
+            const startLeft = parseFloat(windowElement.style.left) || 0;
+            const startTop = parseFloat(windowElement.style.top) || 0;
+
             windowElement.classList.add('window-dragging');
-        });
-        
+
+            const moveWindow = (ev) => {
+                const newLeft = startLeft + (ev.clientX - startX);
+                const newTop = startTop + (ev.clientY - startY);
+
+                const maxLeft = Math.max(0, window.innerWidth - windowElement.offsetWidth);
+                const maxTop = Math.max(0, window.innerHeight - windowElement.offsetHeight);
+
+                windowElement.style.left = `${Math.min(maxLeft, Math.max(0, newLeft))}px`;
+                windowElement.style.top = `${Math.min(maxTop, Math.max(0, newTop))}px`;
+            };
+
+            const stopMoving = () => {
+                document.removeEventListener('pointermove', moveWindow);
+                document.removeEventListener('pointerup', stopMoving);
+                document.removeEventListener('pointercancel', stopMoving);
+                windowElement.classList.remove('window-dragging');
+            };
+
+            document.addEventListener('pointermove', moveWindow);
+            document.addEventListener('pointerup', stopMoving);
+            document.addEventListener('pointercancel', stopMoving);
+        };
+
+        if (window.PointerEvent) {
+            header.addEventListener('pointerdown', (e) => {
+                if (e.pointerType === 'mouse' && e.button !== 0) return;
+                e.preventDefault(); // avoid scroll/selection conflicts
+                startDrag(e);
+            }, { passive: false });
+        } else {
+            // Fallback for very old browsers
+            header.addEventListener('mousedown', (e) => {
+                if (e.button !== 0) return;
+                if (e.target.closest('button')) return;
+                startDrag(e);
+            });
+        }
+
+        // Bring to front when interacting anywhere in the window
+        windowElement.addEventListener('pointerdown', () => bringToFront(windowElement));
         // Minimize button
         minimizeBtn.addEventListener('click', () => {
             windowElement.classList.add('minimized');
@@ -106,14 +143,13 @@ function initDesktop() {
         // Maximize button
         maximizeBtn.addEventListener('click', () => {
             windowElement.classList.toggle('maximized');
-            // Feather replaces <i> with <svg>, so updating via querySelector('i') breaks.
-            // Re-render the icon instead.
+
+            // Feather replaces <i> with <svg>, so don't rely on querySelector('i') here.
             const iconName = windowElement.classList.contains('maximized') ? 'minimize-2' : 'maximize-2';
             maximizeBtn.innerHTML = `<i data-feather="${iconName}"></i>`;
             feather.replace();
         });
-        
-        // Close button
+// Close button
         closeBtn.addEventListener('click', () => {
             windowElement.remove();
         });

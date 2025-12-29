@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Desktop Playground</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+</head>
+<body class="bg-gray-900 text-white h-screen overflow-hidden">
+    <!-- Desktop Icons -->
+    <div id="desktop" class="h-full w-full relative">
+        <!-- Desktop Icons Container -->
+        <div id="desktop-icons" class="absolute top-10 left-10 flex flex-col space-y-6">
+            <div class="desktop-icon" data-window="notes">
+                <i data-feather="file-text" class="mx-auto"></i>
+                <span>Notes</span>
+            </div>
+            <div class="desktop-icon" data-window="explorer">
+                <i data-feather="folder" class="mx-auto"></i>
+                <span>Explorer</span>
+            </div>
+            <div class="desktop-icon" data-window="settings">
+                <i data-feather="settings" class="mx-auto"></i>
+                <span>Settings</span>
+            </div>
+        </div>
+
+        <!-- Taskbar -->
+        <div id="taskbar" class="absolute bottom-0 left-0 w-full bg-gray-800 bg-opacity-80 h-12 flex items-center px-4">
+            <div class="flex items-center space-x-4 min-w-0">
+                <button id="start-btn" class="flex items-center space-x-2 bg-blue-600 px-3 py-1 rounded-md">
+                    <i data-feather="menu"></i>
+                    <span>Start</span>
+                </button>
+                <div id="taskbar-windows" class="flex items-center space-x-2 min-w-0 overflow-x-auto"></div>
+            </div>
+        </div>
+
+        <!-- Window Container -->
+        <div id="window-container" class="absolute top-0 left-0 w-full h-full pointer-events-none">
+            <!-- Windows will be appended here -->
+        </div>
+    </div>
+
+    <!-- Window Templates -->
+    <template id="window-template">
+        <div class="window absolute bg-gray-800 rounded-lg shadow-xl border border-gray-700 overflow-hidden flex flex-col pointer-events-auto">
+            <div class="window-header bg-gray-700 px-3 py-2 flex justify-between items-center cursor-move">
+                <div class="flex items-center space-x-2">
+                    <i class="window-icon"></i>
+                    <span class="window-title font-medium"></span>
+                </div>
+                <div class="flex space-x-2">
+                    <button class="window-minimize p-1 hover:bg-gray-600 rounded">
+                        <i data-feather="minus"></i>
+                    </button>
+                    <button class="window-maximize p-1 hover:bg-gray-600 rounded">
+                        <i data-feather="maximize-2"></i>
+                    </button>
+                    <button class="window-close p-1 hover:bg-red-500 rounded">
+                        <i data-feather="x"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="window-content flex-1 overflow-auto p-4">
+                <!-- Content will be inserted here -->
+            </div>
+        </div>
+    </template>
+
+    <!-- Content Templates -->
+    <template id="notes-content">
+        <div class="h-full">
+            <textarea class="w-full h-full bg-gray-800 text-white p-2 rounded focus:outline-none" placeholder="Start typing your notes here..."></textarea>
+        </div>
+    </template>
+
+    <template id="explorer-content">
+        <div class="flex flex-col space-y-2">
+            <div class="file-item flex items-center space-x-2 p-2 hover:bg-gray-700 rounded">
+                <i data-feather="file"></i>
+                <span>Document.txt</span>
+            </div>
+            <div class="file-item flex items-center space-x-2 p-2 hover:bg-gray-700 rounded">
+                <i data-feather="image"></i>
+                <span>Photo.jpg</span>
+            </div>
+            <div class="file-item flex items-center space-x-2 p-2 hover:bg-gray-700 rounded">
+                <i data-feather="music"></i>
+                <span>Song.mp3</span>
+            </div>
+        </div>
+    </template>
+
+    <template id="settings-content">
+        <div class="space-y-4">
+            <div class="setting-item">
+                <label class="block mb-1">Theme</label>
+                <select class="w-full bg-gray-700 p-2 rounded">
+                    <option>Dark</option>
+                    <option>Light</option>
+                    <option>System</option>
+                </select>
+            </div>
+            <div class="setting-item">
+                <label class="block mb-1">Wallpaper</label>
+                <select class="w-full bg-gray-700 p-2 rounded">
+                    <option>Default</option>
+                    <option>Mountain</option>
+                    <option>Beach</option>
+                </select>
+            </div>
+        </div>
+    </template>
+
+    <script src="script.js"></script>
+    <script>
+        feather.replace();
+    </script>
+</body>
+</html>
