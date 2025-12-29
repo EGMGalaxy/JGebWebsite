@@ -1,0 +1,78 @@
+/* Base Styles */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Desktop Icons */
+.desktop-icon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 80px;
+    padding: 10px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: all 0.2s;
+}
+
+.desktop-icon:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.desktop-icon i {
+    width: 24px;
+    height: 24px;
+    margin-bottom: 5px;
+}
+
+/* Window Styling */
+.window {
+    width: 500px;
+    height: 400px;
+    z-index: 10;
+    transition: all 0.2s;
+    resize: both;
+    min-width: 300px;
+    min-height: 200px;
+}
+
+.window-header {
+    user-select: none;
+}
+
+.window.minimized {
+    display: none;
+}
+
+.window.maximized {
+    width: calc(100% - 20px) !important;
+    height: calc(100% - 70px) !important;
+    top: 10px !important;
+    left: 10px !important;
+    resize: none;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Dragging state */
+.window-dragging {
+    opacity: 0.8;
+    cursor: grabbing;
+}
