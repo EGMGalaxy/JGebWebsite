@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Virtual Desktop</title>
+  <link rel="icon" href="./assets/favicon/favicon.png" type="image/png">
+  <link rel="alternate icon" href="./assets/favicon/favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="style_fixed.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+</head>
+<body class="bg-gray-900 text-white h-screen overflow-hidden">
+  <div id="desktop" class="h-full w-full relative">
+    <!-- Desktop Icons -->
+    <div id="desktop-icons" class="desktop-icons">
+      <button class="desktop-icon" data-window="explorer">
+        <i data-feather="folder"></i>
+        <span>Explorer</span>
+      </button>
+
+      
+      <button class="desktop-icon" data-window="notes">
+        <i data-feather="edit-3"></i>
+        <span>Notizen</span>
+      </button>
+<button class="desktop-icon" data-window="photos">
+        <i data-feather="image"></i>
+        <span>Fotos</span>
+      </button>
+
+      <button class="desktop-icon" data-window="music">
+        <i data-feather="music"></i>
+        <span>Musik</span>
+      </button>
+      <button class="desktop-icon" data-window="game">
+        <i data-feather="heart"></i>
+        <span>Spiel</span>
+      </button>
+
+      <button class="desktop-icon" data-window="unlock" data-file="geheim.enc">
+        <i data-feather="file"></i>
+        <span>gesperrt.enc</span>
+      </button>
+
+
+
+      <button class="desktop-icon" data-window="settings">
+        <i data-feather="settings"></i>
+        <span>Settings</span>
+      </button>
+
+      <button class="desktop-icon" data-window="taskmanager">
+        <i data-feather="activity"></i>
+        <span>Task Manager</span>
+      </button>
+    </div>
+
+    <!-- Window Container -->
+    <div id="window-container" class="absolute inset-0 pointer-events-none"></div>
+
+    <!-- Taskbar -->
+    <div id="taskbar" class="taskbar">
+      <button id="start-btn" class="taskbar-start" title="Start">
+        <i data-feather="grid"></i>
+      </button>
+      <div id="taskbar-items" class="taskbar-items"></div>
+      <div class="taskbar-right">
+        <span id="clock" class="taskbar-clock"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Window Template -->
+  <template id="window-template">
+    <div class="window pointer-events-auto" style="left: 80px; top: 70px; width: 520px; height: 360px;">
+      <div class="window-header">
+        <div class="window-titlebar">
+          <i class="window-icon" data-feather="square"></i>
+          <span class="window-title">Window</span>
+        </div>
+        <div class="window-controls">
+          <button class="window-btn minimize" title="Minimieren"><i data-feather="minus"></i></button>
+          <button class="window-btn maximize" title="Maximieren"><i data-feather="square"></i></button>
+          <button class="window-btn close" title="Schließen"><i data-feather="x"></i></button>
+        </div>
+      </div>
+      <div class="window-content"></div>
+      <div class="resize-handle" title="Resize"></div>
+    </div>
+  </template>
+
+  <!-- Explorer -->
+  <template id="explorer-content">
+    <div class="p-3 space-y-3">
+      <div class="text-sm opacity-80">Dateien</div>
+      
+
+                  <div class="grid grid-cols-1 gap-2">
+        <button class="file-item" data-open="txt" data-file="readme.txt">
+          <i data-feather="file-text"></i><span>readme.txt</span>
+        </button>
+        <button class="file-item" data-open="txt" data-file="hinweis.txt">
+          <i data-feather="file-text"></i><span>hinweis.txt</span>
+        </button>
+        <button class="file-item" data-open="photo" data-file="notiz.png" data-photo-id="note1">
+          <i data-feather="image"></i><span>notiz.png</span>
+        </button>
+        <button class="file-item" data-open="photo" data-file="foto3.png" data-photo-id="p3">
+          <i data-feather="image"></i><span>foto3.png</span>
+        </button>
+        <button class="file-item" data-open="enc" data-file="geheim.enc">
+          <i data-feather="lock"></i><span>geheim.enc</span>
+        </button>
+      </div>
+      <div class="text-xs opacity-60">
+        (Die Wächter-Bilder werden absichtlich nicht als Dateien gelistet.)
+      </div>
+    </div>
+  </template>
+
+  <!-- Text Viewer -->
+  <template id="text-view-content">
+    <div class="p-3">
+      <pre id="text-viewer" class="text-sm whitespace-pre-wrap bg-black/30 rounded-xl p-3 h-full overflow-auto"></pre>
+    </div>
+  
+  <!-- Notes -->
+  <template id="notes-content">
+    <div class="p-3 h-full flex flex-col gap-3">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="text-lg font-semibold">Notizen</div>
+          <div class="text-xs opacity-70">Wird automatisch gespeichert.</div>
+        </div>
+        <button id="notes-clear" class="px-3 py-2 rounded bg-gray-700 hover:bg-gray-600">Leeren</button>
+      </div>
+
+      <textarea id="notes-area" class="notes-area" placeholder="Schreib hier deine Notizen…"></textarea>
+      <div id="notes-status" class="text-xs opacity-70"></div>
+    </div>
+  </template>
+
+</template>
+
+<!-- Image Viewer -->
+<template id="image-view-content">
+  <div class="p-3 h-full flex flex-col gap-2 img-view-root">
+    <img id="image-viewer" class="img-viewer" alt="Bild" />
+    <div id="image-caption" class="text-xs opacity-75"></div>
+  </div>
+</template>
+
+
+  <!-- Unlock -->
+  <template id="unlock-content">
+    <div class="p-3 space-y-3">
+      <div class="text-sm opacity-80">Diese Datei ist verschlüsselt.</div>
+      <input id="unlock-code" class="w-full p-2 rounded bg-gray-700" placeholder="Code eingeben…" autocomplete="off" />
+      <div class="flex gap-2">
+        <button id="unlock-btn" class="px-3 py-2 rounded bg-blue-600 hover:bg-blue-500">Entsperren</button>
+        <button id="unlock-cancel" class="px-3 py-2 rounded bg-gray-600 hover:bg-gray-500">Abbrechen</button>
+      </div>
+      <div id="unlock-msg" class="text-sm"></div>
+    </div>
+  </template>
+
+  <!-- Photos -->
+  <template id="photos-content">
+    <div class="photos-app">
+      <div class="photos-sidebar">
+        <div class="photos-sidebar-title">Bibliothek</div>
+        <div id="photos-list" class="photos-list"></div>
+      </div>
+      <div class="photos-main">
+        
+        <div class="photos-toolbar">
+          <div class="photos-toolbar-left">
+            <button id="photos-zoom-out" class="photos-zoom-btn" title="Zoom out"><i data-feather="zoom-out"></i></button>
+            <button id="photos-zoom-reset" class="photos-zoom-btn" title="Reset"><i data-feather="maximize"></i></button>
+            <button id="photos-zoom-in" class="photos-zoom-btn" title="Zoom in"><i data-feather="zoom-in"></i></button>
+            <span id="photos-zoom-label" class="photos-zoom-label">100%</span>
+          </div>
+          <div class="text-xs opacity-60">Mausrad/Pinch zum Zoomen, ziehen zum Verschieben.</div>
+        </div>
+
+<div class="photos-stage">
+          <img id="photo-img" class="photos-img" alt="Foto" />
+          <div id="photo-fade" class="photos-fade"></div>
+        </div>
+        <div id="photo-caption" class="photos-caption"></div>
+        <div class="photos-hint text-xs opacity-60">
+          Tipp: Wenn der Wächter wach ist, kannst du auf die Tür klicken.
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <!-- Music -->
+  <template id="music-content">
+    <div class="p-3 space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="text-lg font-semibold">Musik</div>
+          <div id="music-now" class="text-sm opacity-70">Nichts spielt</div>
+        </div>
+        <button id="music-stop" class="px-3 py-2 rounded bg-gray-700 hover:bg-gray-600">Stop</button>
+      </div>
+
+      <div class="grid grid-cols-1 gap-2">
+        <button class="track-btn" data-track="ambient"><i data-feather="play"></i><span>Ambient</span></button>
+        <button class="track-btn" data-track="synth"><i data-feather="play"></i><span>Chill Synth</span></button>
+        <button class="track-btn" data-track="hardrock"><i data-feather="zap"></i><span>Hard Rock</span></button>
+      </div>
+
+      <div class="text-xs opacity-60">
+        Optional: Lege MP3s in <code>./assets</code> ab: <code>ambient.mp3</code>, <code>synth.mp3</code>, <code>hardrock.mp3</code>.
+      </div>
+    </div>
+  </template>
+
+
+<!-- Dodge Game -->
+<template id="game-content">
+  <div class="p-3 h-full flex flex-col gap-3">
+    <div class="flex items-center justify-between gap-2">
+      <div>
+        <div class="text-lg font-semibold">Dodge</div>
+        <div class="text-xs opacity-70">Schlage deinen Highscore, um ein weiteres Bild freizuschalten.</div>
+      </div>
+      <button id="game-start" class="px-3 py-2 rounded bg-blue-600 hover:bg-blue-500">Start</button>
+    </div>
+
+    <div class="grid grid-cols-2 gap-2 text-xs">
+      <div class="panel p-2">
+        <div class="opacity-70">Score</div>
+        <div id="game-score" class="text-base font-semibold">0</div>
+      </div>
+      <div class="panel p-2">
+        <div class="opacity-70">Highscore</div>
+        <div id="game-best" class="text-base font-semibold">0</div>
+      </div>
+    </div>
+
+    <div class="game-stage">
+      <canvas id="game-canvas" width="420" height="260" class="game-canvas"></canvas>
+    </div>
+
+    <div id="game-msg" class="text-xs opacity-80"></div>
+    <div class="text-xs opacity-60">
+      Steuerung: Pfeile/WASD. Touch: Finger auf dem Spielfeld bewegen.
+    </div>
+  </div>
+</template>
+
+  <!-- Settings -->
+  <template id="settings-content">
+    <div class="p-3 space-y-4">
+      <div class="text-lg font-semibold">Settings</div>
+
+      <div class="space-y-2">
+        <div class="text-sm opacity-80">Theme</div>
+        <div class="flex flex-wrap gap-2">
+          <button class="set-theme btn-chip" data-theme="dark">Dark</button>
+          <button class="set-theme btn-chip" data-theme="light">Light</button>
+          <button class="set-theme btn-chip" data-theme="system">System</button>
+        </div>
+      </div>
+
+      <div class="space-y-2">
+        <div class="text-sm opacity-80">Wallpaper</div>
+        <div class="flex flex-wrap gap-2">
+          <button class="set-wall btn-chip" data-wall="default">Default</button>
+          <button class="set-wall btn-chip" data-wall="mountain">Mountain</button>
+          <button class="set-wall btn-chip" data-wall="beach">Beach</button>
+          <button class="set-wall btn-chip" data-wall="matrix">Matrix</button>
+        </div>
+      </div>
+
+      <div class="text-xs opacity-60">
+        Hinweis: CPU/RAM “echt” auszulesen geht im Browser nicht zuverlässig — Task Manager zeigt daher simulierte Werte (klar markiert).
+      </div>
+    </div>
+  </template>
+
+  <!-- Task Manager -->
+  <template id="taskmanager-content">
+    <div class="p-3 space-y-4">
+      <div class="flex items-center justify-between">
+        <div class="text-lg font-semibold">Task Manager</div>
+        <div class="text-xs opacity-70">(teilweise simuliert)</div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div class="panel">
+          <div class="panel-title">Gerät</div>
+          <div id="tm-device" class="panel-body text-xs whitespace-pre-wrap"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">Auslastung (simuliert)</div>
+          <div class="space-y-2 text-xs">
+            <div class="flex items-center justify-between"><span>CPU</span><span id="tm-cpu">–</span></div>
+            <div class="bar"><div id="tm-cpu-bar" class="bar-fill" style="width:0%"></div></div>
+
+            <div class="flex items-center justify-between"><span>RAM</span><span id="tm-ram">–</span></div>
+            <div class="bar"><div id="tm-ram-bar" class="bar-fill" style="width:0%"></div></div>
+
+            <div class="flex items-center justify-between"><span>Netz</span><span id="tm-net">–</span></div>
+            <div class="bar"><div id="tm-net-bar" class="bar-fill" style="width:0%"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">Prozesse (Fenster)</div>
+        <div class="overflow-auto max-h-56">
+          <table class="w-full text-xs">
+            <thead class="opacity-70">
+              <tr>
+                <th class="text-left p-2">Name</th>
+                <th class="text-right p-2">CPU</th>
+                <th class="text-right p-2">RAM</th>
+                <th class="text-right p-2">Aktion</th>
+              </tr>
+            </thead>
+            <tbody id="tm-proc"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <script src="script_fixed.js"></script>
+  <script>
+    if (window.feather) feather.replace();
+  </script>
+</body>
+</html>
