@@ -67,8 +67,9 @@ function initDesktop() {
         
         // Drag functionality
         header.addEventListener('mousedown', (e) => {
-            if (e.target.tagName === 'BUTTON' || e.target.tagName === 'I') return;
-            
+            // Don't start dragging when clicking/tapping window control buttons (icons become <svg>)
+            if (e.target && e.target.closest && e.target.closest('button')) return;
+
             const startX = e.clientX;
             const startY = e.clientY;
             const startLeft = parseInt(windowElement.style.left) || 0;
@@ -105,10 +106,10 @@ function initDesktop() {
         // Maximize button
         maximizeBtn.addEventListener('click', () => {
             windowElement.classList.toggle('maximized');
-            maximizeBtn.querySelector('i').setAttribute(
-                'data-feather', 
-                windowElement.classList.contains('maximized') ? 'minimize-2' : 'maximize-2'
-            );
+            // Feather replaces <i> with <svg>, so updating via querySelector('i') breaks.
+            // Re-render the icon instead.
+            const iconName = windowElement.classList.contains('maximized') ? 'minimize-2' : 'maximize-2';
+            maximizeBtn.innerHTML = `<i data-feather="${iconName}"></i>`;
             feather.replace();
         });
         

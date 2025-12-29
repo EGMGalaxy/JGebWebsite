@@ -13,7 +13,7 @@
     <!-- Desktop Icons -->
     <div id="desktop" class="h-full w-full relative">
         <!-- Desktop Icons Container -->
-        <div class="absolute top-10 left-10 flex flex-col space-y-6">
+        <div id="desktop-icons" class="absolute top-10 left-10 flex flex-col space-y-6">
             <div class="desktop-icon" data-window="notes">
                 <i data-feather="file-text" class="mx-auto"></i>
                 <span>Notes</span>
@@ -30,11 +30,12 @@
 
         <!-- Taskbar -->
         <div id="taskbar" class="absolute bottom-0 left-0 w-full bg-gray-800 bg-opacity-80 h-12 flex items-center px-4">
-            <div class="flex items-center space-x-4">
+            <div class="flex items-center space-x-4 min-w-0">
                 <button id="start-btn" class="flex items-center space-x-2 bg-blue-600 px-3 py-1 rounded-md">
                     <i data-feather="menu"></i>
                     <span>Start</span>
                 </button>
+                <div id="taskbar-windows" class="flex items-center space-x-2 min-w-0 overflow-x-auto"></div>
             </div>
         </div>
 

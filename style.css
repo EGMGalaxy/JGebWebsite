@@ -1,6 +1,23 @@
 /* Base Styles */
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+}
+
+:root {
+    --taskbar-h: 48px;
+    --desktop-pad: 40px;
+}
+
+/* Mobile viewport stability (prevents address-bar resize jank) */
+html, body {
+    height: 100%;
+}
+
+/* Improve touch interactions */
+.window-header {
+    touch-action: none; /* enables dragging on touch without page scrolling */
 }
 
 /* Desktop Icons */
@@ -46,10 +63,89 @@ body {
 
 .window.maximized {
     width: calc(100% - 20px) !important;
-    height: calc(100% - 70px) !important;
+    height: calc(100% - (var(--taskbar-h) + 20px)) !important;
     top: 10px !important;
     left: 10px !important;
     resize: none;
+}
+
+/* Taskbar chips */
+.taskbar-window-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 180px;
+    padding: 6px 10px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.08);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.taskbar-window-btn.active {
+    background: rgba(255, 255, 255, 0.16);
+}
+
+/* --- Responsive tweaks --- */
+@media (max-width: 640px) {
+    :root {
+        --taskbar-h: 56px;
+        --desktop-pad: 16px;
+    }
+
+    /* Turn the icon column into a grid */
+    #desktop-icons {
+        top: var(--desktop-pad) !important;
+        left: var(--desktop-pad) !important;
+        right: var(--desktop-pad) !important;
+        display: grid !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px !important;
+    }
+
+    .desktop-icon {
+        width: auto;
+        padding: 12px 8px;
+    }
+
+    .desktop-icon span {
+        font-size: 12px;
+    }
+
+    /* Windows default to a near-fullscreen card */
+    .window {
+        width: calc(100vw - 16px);
+        height: calc(100dvh - var(--taskbar-h) - 16px);
+        left: 8px !important;
+        top: 8px !important;
+        resize: none;
+        border-radius: 16px;
+    }
+
+    .window.maximized {
+        width: calc(100vw - 16px) !important;
+        height: calc(100dvh - var(--taskbar-h) - 16px) !important;
+        left: 8px !important;
+        top: 8px !important;
+        border-radius: 16px;
+    }
+
+    .window-header {
+        padding-top: 10px;
+        padding-bottom: 10px;
+    }
+
+    .window-header button {
+        min-width: 44px;
+        min-height: 44px;
+    }
+}
+
+/* Safe-area support for iOS */
+#taskbar {
+    height: var(--taskbar-h);
+    padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* Custom scrollbar */
