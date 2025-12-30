@@ -6,7 +6,7 @@
   <title>Virtual Desktop</title>
   <link rel="icon" href="./assets/favicon/favicon.png" type="image/png">
   <link rel="alternate icon" href="./assets/favicon/favicon.ico" type="image/x-icon">
-  <link rel="stylesheet" href="style_bundle_fixed.css" />
+  <link rel="stylesheet" href="style_fixed.css" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
 </head>
@@ -19,7 +19,12 @@
         <span>Explorer</span>
       </button>
 
-      <button class="desktop-icon" data-window="photos">
+      
+      <button class="desktop-icon" data-window="notes">
+        <i data-feather="edit-3"></i>
+        <span>Notizen</span>
+      </button>
+<button class="desktop-icon" data-window="photos">
         <i data-feather="image"></i>
         <span>Fotos</span>
       </button>
@@ -33,14 +38,9 @@
         <span>Spiel</span>
       </button>
 
-      <button class="desktop-icon" data-window="notes">
-        <i data-feather="file-text"></i>
-        <span>Notizen</span>
-      </button>
-
       <button class="desktop-icon" data-window="unlock" data-file="geheim.enc">
         <i data-feather="file"></i>
-        <span>geheim.enc</span>
+        <span>gesperrt.enc</span>
       </button>
 
 
@@ -90,13 +90,6 @@
     </div>
   </template>
 
-  <!-- Notizen (einfaches Textfeld) -->
-  <template id="notes-content">
-    <div class="p-3 h-full">
-      <textarea id="notes-text" class="w-full h-full p-3 rounded bg-gray-900/60 outline-none" placeholder="Schreib hier deine Notizen..."></textarea>
-    </div>
-  </template>
-
   <!-- Explorer -->
   <template id="explorer-content">
     <div class="p-3 space-y-3">
@@ -131,7 +124,24 @@
     <div class="p-3">
       <pre id="text-viewer" class="text-sm whitespace-pre-wrap bg-black/30 rounded-xl p-3 h-full overflow-auto"></pre>
     </div>
+  
+  <!-- Notes -->
+  <template id="notes-content">
+    <div class="p-3 h-full flex flex-col gap-3">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="text-lg font-semibold">Notizen</div>
+          <div class="text-xs opacity-70">Wird automatisch gespeichert.</div>
+        </div>
+        <button id="notes-clear" class="px-3 py-2 rounded bg-gray-700 hover:bg-gray-600">Leeren</button>
+      </div>
+
+      <textarea id="notes-area" class="notes-area" placeholder="Schreib hier deine Notizen…"></textarea>
+      <div id="notes-status" class="text-xs opacity-70"></div>
+    </div>
   </template>
+
+</template>
 
 <!-- Image Viewer -->
 <template id="image-view-content">
@@ -163,13 +173,24 @@
         <div id="photos-list" class="photos-list"></div>
       </div>
       <div class="photos-main">
-        <div class="photos-stage">
+        
+        <div class="photos-toolbar">
+          <div class="photos-toolbar-left">
+            <button id="photos-zoom-out" class="photos-zoom-btn" title="Zoom out"><i data-feather="zoom-out"></i></button>
+            <button id="photos-zoom-reset" class="photos-zoom-btn" title="Reset"><i data-feather="maximize"></i></button>
+            <button id="photos-zoom-in" class="photos-zoom-btn" title="Zoom in"><i data-feather="zoom-in"></i></button>
+            <span id="photos-zoom-label" class="photos-zoom-label">100%</span>
+          </div>
+          <div class="text-xs opacity-60">Mausrad/Pinch zum Zoomen, ziehen zum Verschieben.</div>
+        </div>
+
+<div class="photos-stage">
           <img id="photo-img" class="photos-img" alt="Foto" />
           <div id="photo-fade" class="photos-fade"></div>
         </div>
         <div id="photo-caption" class="photos-caption"></div>
         <div class="photos-hint text-xs opacity-60">
-          Coole Fotos
+          Tipp: Wenn der Wächter wach ist, kannst du auf die Tür klicken.
         </div>
       </div>
     </div>
@@ -205,7 +226,7 @@
     <div class="flex items-center justify-between gap-2">
       <div>
         <div class="text-lg font-semibold">Dodge</div>
-        <div class="text-xs opacity-70">Schlage deinen Highscore, um einen Pokal zu bekommen</div>
+        <div class="text-xs opacity-70">Schlage deinen Highscore, um ein weiteres Bild freizuschalten.</div>
       </div>
       <button id="game-start" class="px-3 py-2 rounded bg-blue-600 hover:bg-blue-500">Start</button>
     </div>
@@ -257,7 +278,7 @@
       </div>
 
       <div class="text-xs opacity-60">
-        Hinweis: CPU/RAM “echt” Task Manager zeigt daher "echte" Werte.
+        Hinweis: CPU/RAM “echt” auszulesen geht im Browser nicht zuverlässig — Task Manager zeigt daher simulierte Werte (klar markiert).
       </div>
     </div>
   </template>
@@ -267,7 +288,7 @@
     <div class="p-3 space-y-4">
       <div class="flex items-center justify-between">
         <div class="text-lg font-semibold">Task Manager</div>
-        <div class="text-xs opacity-70">*echt</div>
+        <div class="text-xs opacity-70">(teilweise simuliert)</div>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -277,16 +298,13 @@
         </div>
 
         <div class="panel">
-          <div class="panel-title">Auslastung*</div>
+          <div class="panel-title">Auslastung (simuliert)</div>
           <div class="space-y-2 text-xs">
             <div class="flex items-center justify-between"><span>CPU</span><span id="tm-cpu">–</span></div>
             <div class="bar"><div id="tm-cpu-bar" class="bar-fill" style="width:0%"></div></div>
 
             <div class="flex items-center justify-between"><span>RAM</span><span id="tm-ram">–</span></div>
             <div class="bar"><div id="tm-ram-bar" class="bar-fill" style="width:0%"></div></div>
-
-            <div class="flex items-center justify-between"><span>GPU</span><span id="tm-gpu">–</span></div>
-            <div class="bar"><div id="tm-gpu-bar" class="bar-fill" style="width:0%"></div></div>
 
             <div class="flex items-center justify-between"><span>Netz</span><span id="tm-net">–</span></div>
             <div class="bar"><div id="tm-net-bar" class="bar-fill" style="width:0%"></div></div>
@@ -313,7 +331,7 @@
     </div>
   </template>
 
-  <script src="script_bundle_fixed.js"></script>
+  <script src="script_fixed.js"></script>
   <script>
     if (window.feather) feather.replace();
   </script>

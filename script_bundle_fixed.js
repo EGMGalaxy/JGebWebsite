@@ -15,25 +15,30 @@ function initDesktop() {
   const taskbarItems = document.getElementById('taskbar-items');
   const clockEl = document.getElementById('clock');
 
+  // If these are missing, nothing else can work.
+  if (!desktop || !windowTemplate || !windowContainer || !taskbarItems || !clockEl) {
+    throw new Error('Missing core DOM nodes (#desktop/#window-template/#window-container/#taskbar-items/#clock).');
+  }
+
   const isMobile = window.matchMedia('(max-width: 640px)').matches || window.matchMedia('(pointer: coarse)').matches;
 
   // ====== Game / unlock state ======
   const GAME_BEST_KEY = 'vd_game_best';
   const CLUE2_UNLOCK_KEY = 'vd_clue2_unlocked';
+  const CLUE2_UNLOCK_AT_KEY = 'vd_clue2_unlocked_at';
   // Lege dieses Bild optional in ./assets ab. Es wird erst nach einem neuen Highscore sichtbar.
   const CLUE2_SRC = './assets/loesung_teil2.png';
 
-    const NOTES_KEY = 'vd_notes_text';
-
-// ====== Fake files ======
+  // ====== Fake files ======
   const TEXT_FILES = {
     'readme.txt': 'Willkommen!\n\n- Öffne die Fotos-App.\n- die Musik-App \n- Spiele ein Spiel \n ABER ÖFFNE NICHT DIE GESPERRTE DATEI',
     'hinweis.txt': '-auf der Venus ist ein Tag länger als ein Jahr.\n Rotation: 243 Erdtage  Umlauf: 225 Erdtage\n\n-der typische Tannenduft ist wie der “Schrei” der Bäume\n\n-ich glaube ich habe hex und dez vermischt bei meinem lieblingswort\n\n-zwei zufällige ganze Zahlen sind mit ca. 60,8% Wahrscheinlichkeit teilerfremd (genau: 6/π²).\n\n-ein gemischtes 52er-Kartendeck hat 52! mögliche Reihenfolgen (≈ 8,07×10^67) – praktisch jede Mischung ist einzigartig.\n\n-mein Lieblingswort ist 53+107+69+69 hier stehen noch ein paar zufällige worte damit man es nicht an der größe der absätze sieht\n\n-ozeanische “Wellen” können unter Wasser viel größer sein als an der Oberfläche: Interne Wellen laufen entlang von Dichteschichten und können hunderte Meter Amplitude erreichen.\n\n-banach–tarski: Rein mathematisch kann man (mit Auswahlaxiom) eine Kugel so zerlegen, dass man daraus zwei gleich große Kugeln “zusammensetzen” kann – hat nichts mit realer Physik zu tun.\n\n-meine lieblingzahl ist die zahl 29 \n\n-neutrinos: Von der Sonne fliegen pro Sekunde grob ~10^14 durch deinen Körper, weil sie fast nie wechselwirken.\n\n-wombats machen tatsächlich würfelförmigen Kot – wegen spezieller Mechanik im Darm.\n\n-die Wahrscheinlichkeit, dass du beim Mischen zwei identische Kartendeck-Reihenfolgen bekommst, ist astronomisch klein (Birthday-Problem hilft beim Abschätzen, aber praktisch: “niemals”).\n',
-    'cooleWoerter.txt': '-illimitiert \n\n-inhibitorisch\n\n-Mikrofinanzierungsinitiative\n\n-indifferent\n\n-minimieren\n\n-diffizil\n\n-Antidiskriminierung\n\n-Initiationsritus\n\n-Institutionalisierung\n\n\nDoch mein Lieblingswort ist das mit den wenigsten "i"s'
+
   };
 
-  const TEMP_UNLOCK_CODE = 'admin'; // temporär
-  const SECRET_UNLOCK_IMAGE_SRC = './assets/waechter_wach.png'; // shown after correct code
+  const TEMP_UNLOCK_CODE = 'mono_Sk111270'; // temporär
+  // Bild, das nach erfolgreichem Entsperren angezeigt wird (Datei in ./assets ablegen)
+  const UNLOCKED_IMAGE_SRC = './assets/soeder.png';
   // ====== Wächter-Bilder (nicht in der Liste anzeigen, nur im Fotos-Flow) ======
   const GUARDIAN_SLEEP_SRC = './assets/waechter_schlaf.png';
   const GUARDIAN_AWAKE_SRC = './assets/waechter_wach.png';
@@ -41,8 +46,7 @@ function initDesktop() {
 
   // Fotos in der Bibliothek (bewusst ohne AWAKE/HINT)
   const PHOTO_LIBRARY = [
-    { id: 'p1', title: 'Foto 1: Wächter', src: GUARDIAN_SLEEP_SRC },
-    { id: 'p3', title: 'Foto 3: Landschaft', src: './assets/foto3.png' },
+    { id: 'p1', title: 'Foto 1: Wächter', src: GUARDIAN_SLEEP_SRC },    { id: 'p3', title: 'Foto 3: Landschaft', src: './assets/foto3.png' },
   ];
 
   // ====== Window management ======
@@ -126,13 +130,7 @@ function initDesktop() {
       iconEl.setAttribute('data-feather','music');
       content.appendChild(document.getElementById('music-content').content.cloneNode(true));
       bindMusic(winEl);
-    } else if (type === 'notes'){
-      titleEl.textContent = 'Notizen';
-      iconEl.setAttribute('data-feather','edit-3');
-      content.appendChild(document.getElementById('notes-content').content.cloneNode(true));
-      bindNotes(winEl);
     } else if (type === 'settings'){
-
       titleEl.textContent = 'Settings';
       iconEl.setAttribute('data-feather','settings');
       content.appendChild(document.getElementById('settings-content').content.cloneNode(true));
@@ -142,6 +140,11 @@ function initDesktop() {
       iconEl.setAttribute('data-feather','activity');
       content.appendChild(document.getElementById('taskmanager-content').content.cloneNode(true));
       bindTaskManager(winEl);
+    } else if (type === 'notes'){
+      titleEl.textContent = 'Notizen';
+      iconEl.setAttribute('data-feather','file-text');
+      content.appendChild(document.getElementById('notes-content').content.cloneNode(true));
+      bindNotes(winEl);
     } else if (type === 'text-viewer'){
       titleEl.textContent = options.title || 'Text';
       iconEl.setAttribute('data-feather','file-text');
@@ -189,8 +192,8 @@ function initDesktop() {
         winEl.style.width = side + 'px';
         winEl.style.height = side + 'px';
       } else {
-        winEl.style.width = '600px';
-        winEl.style.height = '600px';
+        winEl.style.width = '300px';
+        winEl.style.height = '300px';
       }
     }
 
@@ -453,34 +456,6 @@ function initDesktop() {
     });
   }
 
-  // ====== Notes ======
-  function bindNotes(winEl){
-    const area = winEl.querySelector('#notes-area');
-    const status = winEl.querySelector('#notes-status');
-    const clearBtn = winEl.querySelector('#notes-clear');
-    if (!area) return;
-    const saved = localStorage.getItem(NOTES_KEY) || '';
-    area.value = saved;
-    let t = 0;
-    const setStatus = (s) => { if (status) status.textContent = s; };
-    setStatus(saved ? 'Geladen.' : '');
-
-    const saveSoon = () => {
-      window.clearTimeout(t);
-      t = window.setTimeout(() => {
-        localStorage.setItem(NOTES_KEY, area.value);
-        setStatus('Gespeichert: ' + new Date().toLocaleTimeString());
-      }, 250);
-    };
-    area.addEventListener('input', saveSoon);
-
-    clearBtn?.addEventListener('click', () => {
-      area.value = '';
-      localStorage.setItem(NOTES_KEY, '');
-      setStatus('Geleert.');
-    });
-  }
-
   // ====== Unlock ======
   function bindUnlock(winEl, fileName){
     const input = winEl.querySelector('#unlock-code');
@@ -521,8 +496,25 @@ function initDesktop() {
       }
 
       setMsg('Entsperrt.');
-      createWindow('image-viewer', { title: fileName || 'geheim.enc', src: SECRET_UNLOCK_IMAGE_SRC, caption: '', fullbleed: false });
+      // Öffne danach direkt ein Bild-Fenster.
+      // Falls ./assets/entsperrt.png nicht existiert, siehst du nur ein kaputtes Bild-Icon –
+      // dann ersetze UNLOCKED_IMAGE_SRC oben durch eine Datei, die du wirklich hast.
+      createWindow('image-viewer', {
+        title: fileName || 'geheim.enc',
+        src: UNLOCKED_IMAGE_SRC,
+        caption: 'Entschlüsselt.'
+      });
       cleanupWindow(winEl);
+    });
+  }
+
+  function bindNotes(winEl){
+    const ta = winEl.querySelector('#notes-text');
+    if (!ta) return;
+    const KEY = 'vd_notes_text';
+    ta.value = localStorage.getItem(KEY) || '';
+    ta.addEventListener('input', () => {
+      localStorage.setItem(KEY, ta.value);
     });
   }
 
@@ -541,116 +533,11 @@ function initDesktop() {
 
     if (!listEl || !imgEl || !capEl) return;
 
-        // Zoom/Pan state (per window)
-    const zoom = { scale: 1, tx: 0, ty: 0 };
-    const zoomInBtn = winEl.querySelector('#photos-zoom-in');
-    const zoomOutBtn = winEl.querySelector('#photos-zoom-out');
-    const zoomResetBtn = winEl.querySelector('#photos-zoom-reset');
-    const zoomLabel = winEl.querySelector('#photos-zoom-label');
-    const stageEl = winEl.querySelector('.photos-stage');
-
-    function updateZoomLabel(){
-      if (zoomLabel) zoomLabel.textContent = `${Math.round(zoom.scale*100)}%`;
-    }
-
-    function applyTransform(){
-      // clamp translate when zoomed so image doesn't drift too far
-      const maxShift = 0.45 * Math.max(imgEl.clientWidth, imgEl.clientHeight);
-      zoom.tx = clamp(zoom.tx, -maxShift, maxShift);
-      zoom.ty = clamp(zoom.ty, -maxShift, maxShift);
-      imgEl.style.transformOrigin = 'center center';
-      imgEl.style.transform = `translate(${zoom.tx}px, ${zoom.ty}px) scale(${zoom.scale})`;
-      updateZoomLabel();
-      imgEl.classList.toggle('zoomed', zoom.scale > 1.02);
-    }
-
-    function setScale(newScale, anchor){
-      const s = clamp(newScale, 1, 4);
-      if (s === zoom.scale) return;
-      // simple: keep current translate, adjust scale
-      zoom.scale = s;
-      if (zoom.scale <= 1.001){ zoom.tx = 0; zoom.ty = 0; }
-      applyTransform();
-    }
-
-    function resetZoom(){
-      zoom.scale = 1; zoom.tx = 0; zoom.ty = 0;
-      applyTransform();
-    }
-
-    zoomInBtn?.addEventListener('click', () => setScale(zoom.scale * 1.15));
-    zoomOutBtn?.addEventListener('click', () => setScale(zoom.scale / 1.15));
-    zoomResetBtn?.addEventListener('click', resetZoom);
-
-    // Wheel zoom (desktop)
-    stageEl?.addEventListener('wheel', (e) => {
-      e.preventDefault();
-      const delta = Math.sign(e.deltaY);
-      const factor = delta > 0 ? 1/1.12 : 1.12;
-      setScale(zoom.scale * factor);
-    }, { passive: false });
-
-    // Pan + pinch zoom (pointer events)
-    const pointers = new Map();
-    let panStart = null;
-    let pinchStart = null;
-
-    function getDist(a, b){
-      const dx = a.x - b.x, dy = a.y - b.y;
-      return Math.hypot(dx, dy);
-    }
-
-    stageEl?.addEventListener('pointerdown', (e) => {
-      stageEl.setPointerCapture(e.pointerId);
-      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-
-      if (pointers.size === 1){
-        panStart = { x: e.clientX, y: e.clientY, tx: zoom.tx, ty: zoom.ty };
-      } else if (pointers.size === 2){
-        const pts = [...pointers.values()];
-        pinchStart = { dist: getDist(pts[0], pts[1]), scale: zoom.scale };
-      }
-    });
-
-    stageEl?.addEventListener('pointermove', (e) => {
-      if (!pointers.has(e.pointerId)) return;
-      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-
-      if (pointers.size === 1 && panStart && zoom.scale > 1.01){
-        const dx = e.clientX - panStart.x;
-        const dy = e.clientY - panStart.y;
-        zoom.tx = panStart.tx + dx;
-        zoom.ty = panStart.ty + dy;
-        applyTransform();
-      } else if (pointers.size === 2 && pinchStart){
-        const pts = [...pointers.values()];
-        const d = getDist(pts[0], pts[1]);
-        const ratio = d / (pinchStart.dist || 1);
-        setScale(pinchStart.scale * ratio);
-      }
-    });
-
-    function endPointer(e){
-      pointers.delete(e.pointerId);
-      if (pointers.size === 0){
-        panStart = null; pinchStart = null;
-      } else if (pointers.size === 1){
-        const pts = [...pointers.values()];
-        panStart = { x: pts[0].x, y: pts[0].y, tx: zoom.tx, ty: zoom.ty };
-        pinchStart = null;
-      }
-    }
-
-    stageEl?.addEventListener('pointerup', endPointer);
-    stageEl?.addEventListener('pointercancel', endPointer);
-
-    // store runtime
-    photosRuntime.set(winId, { selectedId: null, listEl, imgEl, capEl, fadeEl, zoom, resetZoom });
-    resetZoom();
+    photosRuntime.set(winId, { selectedId: null, listEl, imgEl, capEl, fadeEl });
 
     // visible library (extra clue appears only after unlock)
     const visibleLibrary = [...PHOTO_LIBRARY];
-    if (localStorage.getItem(CLUE2_UNLOCK_KEY) === '1'){
+    if (isClue2Unlocked()){
       visibleLibrary.push({ id: 'clue2', title: 'Foto: Zusatz-Hinweis', src: CLUE2_SRC });
     }
 
@@ -677,46 +564,298 @@ function initDesktop() {
 
     // If hardrock already playing: animate guardian wake (only if currently sleep photo)
     maybeWakeGuardianIn(winId);
+    // ===== Zoom/Pan (Wheel + Pinch) + Tür-Hotspot (funktioniert trotz Zoom) =====
+    const stageEl = winEl.querySelector('.photos-stage');
+    if (!stageEl) return;
 
-    // Door hotspot click
-    imgEl.addEventListener('click', (e) => {
+    const zoom = { scale: 1, tx: 0, ty: 0 };
+    const pointers = new Map();
+    let dragging = { active:false, moved:false, startX:0, startY:0, startTx:0, startTy:0 };
+    let pinching = { active:false, startDist:0, startScale:1, startTx:0, startTy:0, midX:0, midY:0, imgX:0, imgY:0 };
+
+    function applyTransform(){
+      imgEl.style.transform = `translate(${zoom.tx}px, ${zoom.ty}px) scale(${zoom.scale})`;
+    }
+
+    function clampPan(){
+      const lay = photosRuntime.get(winId)?.layout;
+      if (!lay) return;
+
+      const scaledW = lay.dw * zoom.scale;
+      const scaledH = lay.dh * zoom.scale;
+
+      // If the scaled image fits, lock to center (no pan)
+      if (scaledW <= lay.sw) zoom.tx = 0;
+      else {
+        const minLeft = lay.sw - scaledW;
+        const maxLeft = 0;
+        const minTx = minLeft - lay.baseLeft;
+        const maxTx = maxLeft - lay.baseLeft;
+        zoom.tx = clamp(zoom.tx, minTx, maxTx);
+      }
+
+      if (scaledH <= lay.sh) zoom.ty = 0;
+      else {
+        const minTop = lay.sh - scaledH;
+        const maxTop = 0;
+        const minTy = minTop - lay.baseTop;
+        const maxTy = maxTop - lay.baseTop;
+        zoom.ty = clamp(zoom.ty, minTy, maxTy);
+      }
+    }
+
+    function relayout(){
+      const sw = stageEl.clientWidth;
+      const sh = stageEl.clientHeight;
+      const nw = imgEl.naturalWidth || 1;
+      const nh = imgEl.naturalHeight || 1;
+
+      const aspect = nw / nh;
+      let dw, dh;
+      if ((sw / sh) > aspect){
+        dh = sh;
+        dw = dh * aspect;
+      } else {
+        dw = sw;
+        dh = dw / aspect;
+      }
+
+      const baseLeft = (sw - dw) / 2;
+      const baseTop  = (sh - dh) / 2;
+
+      // lock the image box to the "contain" rect and transform inside it
+      imgEl.style.position = 'absolute';
+      imgEl.style.left = `${baseLeft}px`;
+      imgEl.style.top  = `${baseTop}px`;
+      imgEl.style.width = `${dw}px`;
+      imgEl.style.height = `${dh}px`;
+
       const rt = photosRuntime.get(winId);
-      if (!rt) return;
+      if (rt) rt.layout = { sw, sh, dw, dh, baseLeft, baseTop };
 
-      // Only when guardian awake and hint not shown
+      clampPan();
+      applyTransform();
+    }
+
+    function resetZoom(){
+      zoom.scale = 1;
+      zoom.tx = 0;
+      zoom.ty = 0;
+      clampPan();
+      applyTransform();
+    }
+
+    // expose to shared helpers
+    const rtNow = photosRuntime.get(winId);
+    if (rtNow){
+      rtNow.zoom = zoom;
+      rtNow.stageEl = stageEl;
+      rtNow.resetZoom = resetZoom;
+      rtNow.relayout = relayout;
+    }
+
+    // initial layout
+    if (imgEl.complete) relayout();
+    else imgEl.onload = () => relayout();
+
+    const ro = new ResizeObserver(() => relayout());
+    ro.observe(stageEl);
+    winEl.addEventListener('remove', () => ro.disconnect());
+
+    stageEl.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      if (!photosRuntime.get(winId)?.layout) return;
+
+      const rect = stageEl.getBoundingClientRect();
+      const sx = e.clientX - rect.left;
+      const sy = e.clientY - rect.top;
+      const lay = photosRuntime.get(winId).layout;
+
+      const imgX = (sx - (lay.baseLeft + zoom.tx)) / zoom.scale;
+      const imgY = (sy - (lay.baseTop + zoom.ty)) / zoom.scale;
+
+      const factor = e.deltaY < 0 ? 1.10 : 0.90;
+      const nextScale = clamp(zoom.scale * factor, 1, 4);
+
+      zoom.tx = sx - lay.baseLeft - imgX * nextScale;
+      zoom.ty = sy - lay.baseTop  - imgY * nextScale;
+      zoom.scale = nextScale;
+
+      clampPan();
+      applyTransform();
+    }, { passive: false });
+
+    function dist(a,b){
+      const dx = a.x - b.x;
+      const dy = a.y - b.y;
+      return Math.hypot(dx,dy);
+    }
+
+    stageEl.addEventListener('pointerdown', (e) => {
+      stageEl.setPointerCapture(e.pointerId);
+      const rect = stageEl.getBoundingClientRect();
+      const p = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+      pointers.set(e.pointerId, p);
+
+      dragging.active = true;
+      dragging.moved = false;
+      dragging.startX = p.x;
+      dragging.startY = p.y;
+      dragging.startTx = zoom.tx;
+      dragging.startTy = zoom.ty;
+
+      if (pointers.size === 2){
+        const pts = [...pointers.values()];
+        pinching.active = true;
+        pinching.startDist = dist(pts[0], pts[1]);
+        pinching.startScale = zoom.scale;
+        pinching.startTx = zoom.tx;
+        pinching.startTy = zoom.ty;
+
+        pinching.midX = (pts[0].x + pts[1].x)/2;
+        pinching.midY = (pts[0].y + pts[1].y)/2;
+
+        const lay = photosRuntime.get(winId)?.layout;
+        if (lay){
+          pinching.imgX = (pinching.midX - (lay.baseLeft + zoom.tx)) / zoom.scale;
+          pinching.imgY = (pinching.midY - (lay.baseTop  + zoom.ty)) / zoom.scale;
+        }
+      }
+    });
+
+    stageEl.addEventListener('pointermove', (e) => {
+      if (!pointers.has(e.pointerId)) return;
+      const rect = stageEl.getBoundingClientRect();
+      const p = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+      pointers.set(e.pointerId, p);
+
+      const lay = photosRuntime.get(winId)?.layout;
+      if (!lay) return;
+
+      if (pointers.size === 2){
+        const pts = [...pointers.values()];
+        const d = dist(pts[0], pts[1]);
+        if (pinching.startDist > 0){
+          const ratio = d / pinching.startDist;
+          const nextScale = clamp(pinching.startScale * ratio, 1, 4);
+
+          // zoom around the pinch midpoint
+          zoom.scale = nextScale;
+          zoom.tx = pinching.midX - lay.baseLeft - pinching.imgX * nextScale;
+          zoom.ty = pinching.midY - lay.baseTop  - pinching.imgY * nextScale;
+
+          clampPan();
+          applyTransform();
+        }
+        dragging.moved = true;
+        return;
+      }
+
+      // one-finger/mouse drag pan (only meaningful when zoomed)
+      const dx = p.x - dragging.startX;
+      const dy = p.y - dragging.startY;
+
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) dragging.moved = true;
+
+      if (zoom.scale > 1.001){
+        zoom.tx = dragging.startTx + dx;
+        zoom.ty = dragging.startTy + dy;
+        clampPan();
+        applyTransform();
+      }
+    });
+
+    stageEl.addEventListener('pointerup', (e) => {
+      pointers.delete(e.pointerId);
+      try { stageEl.releasePointerCapture(e.pointerId); } catch {}
+
+      // end pinch if needed
+      if (pointers.size < 2) pinching.active = false;
+
+      const rect = stageEl.getBoundingClientRect();
+      const sx = e.clientX - rect.left;
+      const sy = e.clientY - rect.top;
+
+      // Treat as click if we didn't move
+      if (!dragging.moved){
+        handleSceneClick(sx, sy);
+      }
+
+      dragging.active = false;
+      dragging.moved = false;
+    });
+
+    stageEl.addEventListener('pointercancel', (e) => {
+      pointers.delete(e.pointerId);
+      dragging.active = false;
+      dragging.moved = false;
+      pinching.active = false;
+    });
+
+    // double click / double tap = reset zoom
+    stageEl.addEventListener('dblclick', () => resetZoom());
+
+    function handleSceneClick(sx, sy){
+      // Only when guardian awake + hardrock playing + hint not shown + currently showing the awake image
+      if (state.currentTrack !== 'hardrock') return;
       if (!state.photos.guardianAwake || state.photos.hintShown) return;
 
-      const rect = imgEl.getBoundingClientRect();
-      const x = (e.clientX - rect.left) / rect.width;
-      const y = (e.clientY - rect.top) / rect.height;
+      const rt = photosRuntime.get(winId);
+      if (!rt || !rt.layout) return;
+
+      const showingAwake = rt.imgEl?.src && rt.imgEl.src.includes('waechter_wach');
+      if (!showingAwake) return;
+
+      const lay = rt.layout;
+
+      const u = (sx - (lay.baseLeft + zoom.tx)) / (lay.dw * zoom.scale);
+      const v = (sy - (lay.baseTop  + zoom.ty)) / (lay.dh * zoom.scale);
+
+      if (u < 0 || u > 1 || v < 0 || v > 1) return;
 
       // Door zone (adjust if needed)
-      const inDoor = (x > 0.62 && x < 0.95 && y > 0.35 && y < 0.95);
+      const inDoor = (u > 0.62 && u < 0.95 && v > 0.35 && v < 0.95);
       if (!inDoor) return;
 
-      // swap to hint
       state.photos.hintShown = true;
       transitionSwap(rt, GUARDIAN_HINT_SRC, 'Hinweis');
-    });
+    }
   }
 
-  function showPhoto(winId, src, title){
+    function showPhoto(winId, src, title){
     const rt = photosRuntime.get(winId);
     if (!rt) return;
+
     rt.selectedId = src;
+
+    // reset zoom/pan when changing the photo
+    if (rt.resetZoom) rt.resetZoom();
+
+    // load + relayout when the image is ready
+    rt.imgEl.onload = () => {
+      if (rt.relayout) rt.relayout();
+    };
+
     rt.imgEl.src = src;
     rt.capEl.textContent = title;
-    if (typeof rt.resetZoom === 'function') rt.resetZoom();
   }
 
-  function transitionSwap(rt, newSrc, caption){
+    function transitionSwap(rt, newSrc, caption){
+    if (!rt) return;
+
+    // reset zoom/pan for the cinematic swap
+    if (rt.resetZoom) rt.resetZoom();
+
     if (!rt.fadeEl) {
+      rt.imgEl.onload = () => { if (rt.relayout) rt.relayout(); };
       rt.imgEl.src = newSrc;
       rt.capEl.textContent = caption || '';
       return;
     }
+
     rt.fadeEl.style.opacity = '1';
     setTimeout(() => {
+      rt.imgEl.onload = () => { if (rt.relayout) rt.relayout(); };
       rt.imgEl.src = newSrc;
       rt.capEl.textContent = caption || '';
       setTimeout(() => rt.fadeEl.style.opacity = '0', 40);
@@ -986,9 +1125,29 @@ function initDesktop() {
     localStorage.setItem(GAME_BEST_KEY, String(v));
   }
 
-  function unlockClue2(){
-    if (localStorage.getItem(CLUE2_UNLOCK_KEY) === '1') return;
+  function isClue2Unlocked(){
+    const flag = localStorage.getItem(CLUE2_UNLOCK_KEY) === '1';
+    if (!flag) return false;
+
+    const atRaw = localStorage.getItem(CLUE2_UNLOCK_AT_KEY);
+    const at = atRaw == null ? NaN : Number(atRaw);
+
+    // Legacy/buggy state: unlocked flag set but no "at" value -> treat as locked to avoid early reveal
+    if (!Number.isFinite(at) || at <= 0){
+      localStorage.removeItem(CLUE2_UNLOCK_KEY);
+      localStorage.removeItem(CLUE2_UNLOCK_AT_KEY);
+      return false;
+    }
+
+    // If best is missing for some reason, still allow if we have an "at"
+    const best = getBestScore();
+    return at <= best;
+  }
+
+  function unlockClue2(newBest){
+    if (isClue2Unlocked()) return;
     localStorage.setItem(CLUE2_UNLOCK_KEY, '1');
+    localStorage.setItem(CLUE2_UNLOCK_AT_KEY, String(newBest || getBestScore()));
     refreshOpenPhotosLibraries();
     // Show the newly unlocked image once
     createWindow('image-viewer', {
@@ -1007,7 +1166,7 @@ function initDesktop() {
       const listEl = rt.listEl;
       if (!listEl) continue;
       const visibleLibrary = [...PHOTO_LIBRARY];
-      if (localStorage.getItem(CLUE2_UNLOCK_KEY) === '1'){
+      if (isClue2Unlocked()){
         visibleLibrary.push({ id: 'clue2', title: 'Foto: Zusatz-Hinweis', src: CLUE2_SRC });
       }
       listEl.innerHTML = '';
@@ -1217,7 +1376,7 @@ function initDesktop() {
           setBestScore(best);
           if (bestEl) bestEl.textContent = String(best);
           setMsg(`Neuer Highscore: ${best}s. Freigeschaltet.`);
-          unlockClue2();
+          unlockClue2(best);
         } else {
           setMsg(`Game Over. Score: ${score}s. Ziel: ${prevBest+1}s`);
         }
@@ -1311,9 +1470,11 @@ function initDesktop() {
     const devEl = winEl.querySelector('#tm-device');
     const cpuEl = winEl.querySelector('#tm-cpu');
     const ramEl = winEl.querySelector('#tm-ram');
+    const gpuEl = winEl.querySelector('#tm-gpu');
     const netEl = winEl.querySelector('#tm-net');
     const cpuBar = winEl.querySelector('#tm-cpu-bar');
     const ramBar = winEl.querySelector('#tm-ram-bar');
+    const gpuBar = winEl.querySelector('#tm-gpu-bar');
     const netBar = winEl.querySelector('#tm-net-bar');
     const procTbody = winEl.querySelector('#tm-proc');
 
@@ -1325,8 +1486,20 @@ function initDesktop() {
     const plat = navigator.platform || '–';
     const scr = `${window.screen.width}×${window.screen.height} (CSS px)`;
 
+    // some extra (simulated) hardware names for atmosphere
+    const CPU_NAMES = ['Intel Core i7-12700K', 'AMD Ryzen 5 5600X', 'Intel Core i5-13600K', 'AMD Ryzen 7 5800X3D', 'Apple M2'];
+    const GPU_NAMES = ['NVIDIA RTX 3060', 'NVIDIA RTX 4070', 'AMD Radeon RX 6600', 'Intel Arc A750', 'Apple GPU'];
+    const MOBO_NAMES = ['ASUS TUF B550-PLUS', 'MSI MAG Z690 TOMAHAWK', 'Gigabyte B760M DS3H', 'ASRock X570 Steel Legend', 'Dell OEM Board'];
+
+    const fakeCPU = CPU_NAMES[Math.floor(Math.random()*CPU_NAMES.length)];
+    const fakeGPU = GPU_NAMES[Math.floor(Math.random()*GPU_NAMES.length)];
+    const fakeMB  = MOBO_NAMES[Math.floor(Math.random()*MOBO_NAMES.length)];
+
     if (devEl){
       devEl.textContent =
+        `CPU: ${fakeCPU} (simuliert)\n`+
+        `GPU: ${fakeGPU} (simuliert)\n`+
+        `Motherboard: ${fakeMB} (simuliert)\n\n`+
         `User-Agent: ${ua}\n`+
         `Platform: ${plat}\n`+
         `Language: ${lang}\n`+
@@ -1338,19 +1511,23 @@ function initDesktop() {
     // simulated baseline
     let cpu = 18 + Math.random()*10;
     let ram = 34 + Math.random()*10;
+    let gpu = 22 + Math.random()*10;
     let net = 1.2 + Math.random()*1.5;
 
     const id = setInterval(() => {
       cpu = clamp(cpu + (Math.random()-0.5)*7, 2, 98);
       ram = clamp(ram + (Math.random()-0.5)*4, 8, 92);
+      gpu = clamp(gpu + (Math.random()-0.5)*6, 1, 99);
       net = clamp(net + (Math.random()-0.5)*1.6, 0, 12);
 
       if (cpuEl) cpuEl.textContent = `${cpu.toFixed(0)}%`;
       if (ramEl) ramEl.textContent = `${ram.toFixed(0)}%`;
+      if (gpuEl) gpuEl.textContent = `${gpu.toFixed(0)}%`;
       if (netEl) netEl.textContent = `${net.toFixed(1)} Mbit/s`;
 
       if (cpuBar) cpuBar.style.width = `${cpu.toFixed(0)}%`;
       if (ramBar) ramBar.style.width = `${ram.toFixed(0)}%`;
+      if (gpuBar) gpuBar.style.width = `${gpu.toFixed(0)}%`;
       if (netBar) netBar.style.width = `${clamp((net/12)*100,0,100).toFixed(0)}%`;
 
       // process list = windows
